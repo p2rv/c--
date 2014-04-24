@@ -6,15 +6,16 @@ enum Token_value
 {
 	NAME,NUMB,END,OPER
 };
+
 Token_value get_token_type(char const ch);
 void get_token();
-int tmp_num;
-std::string tmp_str;
+
 int main()
 {
 	get_token();
 	return 0;
 }
+
 Token_value get_token_type(char const ch)
 {
 	if(isalpha(ch))
@@ -24,6 +25,7 @@ Token_value get_token_type(char const ch)
 	else
 		return END;
 }
+
 void get_token()
 {
 	char ch;
@@ -31,21 +33,23 @@ void get_token()
 	std::string str;
     while(str!="end")
     {
-	std::cin.get(ch);
-	switch(get_token_type(ch))
-	{
-		case NAME:
-			std::cin.putback(ch);
-			std::cin>>str;
-			std::cout<<str<<'\n';
-		break;
-		case NUMB:
-			std::cin.putback(ch);
-			std::cin>>num;
-			tmp_num=num;
-			std::cout<<num<<'\n';
-		break;
-	}
+		std::cin.get(ch);
+		switch(get_token_type(ch))
+		{
+			case NAME:
+				std::cin.putback(ch);
+				std::cin>>str;
+				std::cout<<str<<'\n';
+			break;
+			case NUMB:
+				std::cin.putback(ch);
+				std::cin>>num;
+				std::cout<<num<<'\n';
+			break;
+			default:
+				std::cout<<(int)ch<<'\n';\
+			break;
+		}
     }
 
 }
