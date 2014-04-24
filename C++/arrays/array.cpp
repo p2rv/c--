@@ -27,7 +27,7 @@ int main()
 	// std::cout<<def<<'\n';
 	// printf ("It took me  clicks (%f seconds).\n",((float)def)/CLOCKS_PER_SEC);
 	 int x=10;
-	 x=30||3;
+	 x=3||03;
 	 std::cout<<x<<'\n';
 	return 0;
 }
