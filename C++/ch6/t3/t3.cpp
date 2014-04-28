@@ -10,6 +10,9 @@ enum Token_value
 
 Token_value get_token_type(char const ch);
 void get_token();
+bool vait_numb(char const ch,int &numb);
+bool vait_name(char const ch,int &name);
+bool vait_oper(char const ch,int &oper);
 
 int main()
 {
@@ -47,15 +50,17 @@ Token_value get_token_type(char const ch)
 void get_token()
 {
 	char ch='';
-	int num=0;
+	int num=-1; //-1 uses for test result
+	double res=0;
 	std::string str="";
-	Token_value opr=SPACE;
+	Token_value prev,cur=SPACE;
 	std::map<std::string,int> values;
 
     while(str!="end")
     {
 		std::cin.get(ch);
-		switch(get_token_type(ch))
+		cur=get_token_type(ch);
+		switch(cur)
 		{
 			case NAME:
 				std::cin.putback(ch);
@@ -70,7 +75,9 @@ void get_token()
 			case END:
 				if(opr==ASSIGN || opr==SPACE && str!="")
 					values[str]=num;
-				
+				if(opt==ASSIGN || opr==SPACE && str=="")
+					std::cout<<'\t'<<num;
+
 				break;
 			default:
 				opr=get_token_type(ch);
@@ -79,4 +86,31 @@ void get_token()
 		}
     }
 
+}
+bool vait_numb(char const ch,int &numb)
+{
+	if(get_token_type(ch)!=NUMB)
+		return false;
+	std::cin.putback(ch);
+	std::cin>>numb;
+	return true;
+}
+bool vait_name(char const ch,int &name)
+{
+	if(get_token_type(ch)!=NAME)
+		return false;
+	std::cin.putback(ch);
+	std::cin>>name;
+	return true;	
+}
+bool wait_oper(char const ch,int &oper)
+{
+	Token_value cur=get_token(ch);
+	if(cur==MUL||cur==DIV||cur==PLUS||cur==MINUS)
+	{
+		oper=cur;
+		return true;
+	}
+	else
+		return false;
 }
