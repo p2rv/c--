@@ -10,9 +10,9 @@ enum Token_value
 
 Token_value get_token_type(char const ch);
 void get_token();
-bool vait_numb(char const ch,int &numb);
-bool vait_name(char const ch,int &name);
-bool vait_oper(char const ch,int &oper);
+bool wait_numb(char const ch,int &numb);
+bool wait_name(char const ch,int &name);
+bool wait_oper(char const ch,int &oper);
 
 int main()
 {
@@ -87,7 +87,7 @@ void get_token()
     }
 
 }
-bool vait_numb(char const ch,int &numb)
+bool wait_numb(char const ch,int &numb)
 {
 	if(get_token_type(ch)!=NUMB)
 		return false;
@@ -95,7 +95,7 @@ bool vait_numb(char const ch,int &numb)
 	std::cin>>numb;
 	return true;
 }
-bool vait_name(char const ch,int &name)
+bool wait_name(char const ch,int &name)
 {
 	if(get_token_type(ch)!=NAME)
 		return false;
