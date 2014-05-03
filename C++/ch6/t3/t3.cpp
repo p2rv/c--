@@ -85,7 +85,6 @@ void get_token()
 			break;
 		}
     }
-
 }
 bool wait_numb(char const ch,int &numb)
 {
