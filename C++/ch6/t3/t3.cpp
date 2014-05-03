@@ -7,6 +7,10 @@ enum Token_value
 {
 	NAME,NUMB,END,ASSIGN,MUL,DIV,PLUS,MINUS,SPACE
 };
+enum Token_type
+{
+	NAM,NUM,OPR
+}
 
 Token_value get_token_type(char const ch);
 void get_token();
