@@ -14,16 +14,16 @@ enum Token_type
 };
 
 Token_value get_token_type(char const ch);
-void get_token();
+void GetToken();
+bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
+int GetOprPriority(Token_value opr);
 
 int main()
 {
-	get_token();
+	GetToken();
 	return 0;
 }
-
-
-void get_token()
+void GetToken()
 {
 	char ch;
 	std::vector<char> opr;
@@ -58,7 +58,6 @@ void get_token()
 			case PLUS:case MINUS:case DIV:case MUL:case ASSIGN:
 				opr.push_back(ch);
 				order.push_back(OPR);
-				std::cout<<ch<<'\n';
 				break;
 			case END:
 				int a,b,c;
@@ -115,4 +114,60 @@ Token_value get_token_type(char const ch)
 		default:
 			return SPACE;	
 	}
+}
+bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
+{
+	std::vector<char> tmp_opr;
+	std::vector<int>  tmp_num;
+	std::vector<std::string> tmp_nam;
+	std::vector<Token_type> tmp_order;
+
+	for(int i=0;i<order.size();++i)
+	{
+		switch(order[i])
+		{
+			case NAM:
+				tmp_nam.push_back(nam[a]);
+				++a;
+				break;
+			case NUM:
+				tmp_num.push_back(nam[b]);
+				++b;
+				break;
+			case OPR:
+				if(tmp_opr.size())
+				{
+					char cur_opr=opr[c];
+					switch(cur_opr)
+					{
+						case '=':
+							return false;
+							break;
+						default:
+							while(GetOprPriority(cur_opr)>=GetOprPriority(tmp_opr[tmp_opr.size()-1]))
+							{
+								char ch=tmp_opr.pop_back();
+							}
+							if()
+							{	
+								
+								tmp_opr.push_back(cur_opr);
+								tmp_opr.push_back(ch);
+							}
+							else
+								tmp_opr.push_back(cur_opr);
+							break;
+
+					}
+				}
+				else
+				{
+					tmp_opr.push_back(opr[c]);
+					++c;
+				}
+				break;
+		}
+	}
+
+	return true;
 }
