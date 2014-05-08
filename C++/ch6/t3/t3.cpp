@@ -55,9 +55,25 @@ void GetToken()
 				num.push_back(tmp_num);
 				order.push_back(NUM);
 			break;
-			case PLUS:case MINUS:case DIV:case MUL:case ASSIGN:
+			case PLUS:case MINUS:case DIV:case MUL:
 				opr.push_back(ch);
 				order.push_back(OPR);
+				break;
+			case ASSIGN:
+				if (nam.size()==order.size()==1)
+				{
+					opr.push_back(ch);
+					order.push_back(OPR);
+				}
+				else
+				{
+					std::cin.ignore(10000, '\n');
+					std::cout<<"Fail";
+					num.clear();
+					nam.clear();
+					opr.clear();
+					order.clear();
+				}
 				break;
 			case END:
 				int a,b,c;
@@ -119,7 +135,7 @@ Token_value get_token_type(char const ch)
 			return SPACE;	
 	}
 }
- bool Exchange(std::vector<char>* opr, char const cur)
+ /*bool Exchange(std::vector<char>* opr, char const cur)
  {
  	char ch=opr->back();
  	opr->pop_back();
@@ -129,11 +145,11 @@ Token_value get_token_type(char const ch)
  		opr->push_back(cur);
  	opr->push_back(ch);
  	return 1;
- }
+ }*/
 
  bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
  {
- 	std::vector<char> tmp_opr;
+ 	std::vector<char> tmp_opr,buffer;
  	std::vector<int>  tmp_num;
  	std::vector<std::string> tmp_nam;
  	std::vector<Token_type> tmp_order;
@@ -147,39 +163,46 @@ Token_value get_token_type(char const ch)
  		{
  			case NAM:
  				tmp_nam.push_back((*nam)[a]);
+ 				tmp_order.push_back(NAM);
  				++a;
  				break;
  			case NUM:
  				tmp_num.push_back((*num)[b]);
+ 				tmp_order.push_back(NUM);
  				++b;
  				break;
  			case OPR:
- 				if(tmp_opr.size())
+ 				if(buffer.size())
  				{
  					char cur_opr=(*opr)[c];
- 					switch(cur_opr)
- 					{
- 						case '=':
- 							return false;
- 							break;
- 						default:
- 							if(GetOprPriority(cur_opr)>=GetOprPriority(tmp_opr[tmp_opr.size()-1]))
- 							{	
-								
- 								Exchange(&tmp_opr,cur_opr);
- 							}
- 							else
- 								tmp_opr.push_back(cur_opr);
- 							break;
- 					}
+ 					if(GetOprPriority(cur_opr)<GetOprPriority(buffer[buffer.size()-1]))
+					{
+						while(buffer.size()>0)
+						{
+							char top=buffer.back();
+							tmp_opr.push_back(top);
+							tmp_order.push_back(OPR);
+							buffer.pop_back();
+						}
+						buffer.push_back(cur_opr);
+					}
+					else
+	 					buffer.push_back(cur_opr);
  				}
  				else
- 					tmp_opr.push_back((*opr)[c]);
+ 					buffer.push_back((*opr)[c]);
  				++c;
  				break;
  		}
  	}
- 	std::cout<<tmp_order.size();
+ 	while(buffer.size()>0)
+	{
+		char top=buffer.back();
+		tmp_opr.push_back(top);
+		tmp_order.push_back(OPR);
+		buffer.pop_back();
+	}
+	std::cout<<'\n'; 	
  	a=b=c=0;
 				for(int i=0;i<tmp_order.size();++i)
 				{
