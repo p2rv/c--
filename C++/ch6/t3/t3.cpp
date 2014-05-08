@@ -16,7 +16,7 @@ enum Token_type
 Token_value get_token_type(char const ch);
 void GetToken();
 bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
-int GetOprPriority(Token_value opr);
+int GetOprPriority(char opr);
 bool Exchange(std::vector<char>* opr, char const cur);
 
 int main()
@@ -36,7 +36,6 @@ void GetToken()
 	int tmp_num;
 	char tmp_opr;
 	Token_type tmp_type;
-
 
     while(1)
     {
@@ -81,30 +80,9 @@ void GetToken()
 							break;
 					}
 				}
-				num.clear();
-				nam.clear();
-				opr.clear();
-				order.clear();
+				
 				ConvertToRPN(&opr,&num,&nam,&order);
-				a=b=c=0;
-				for(int i=0;i<order.size();++i)
-				{
-					switch(order[i])
-					{
-						case NAM:
-							std::cout<<nam[a]<<' ';
-							++a;
-							break;
-						case NUM:
-							std::cout<<num[b]<<' ';
-							++b;
-							break;
-						case OPR:
-							std::cout<<opr[c]<<' ';
-							++c;
-							break;
-					}
-				}
+				
 				num.clear();
 				nam.clear();
 				opr.clear();
@@ -114,6 +92,7 @@ void GetToken()
 		}
     }
 }
+
 Token_value get_token_type(char const ch)
 {
 	if(isalpha(ch))
@@ -140,66 +119,101 @@ Token_value get_token_type(char const ch)
 			return SPACE;	
 	}
 }
-bool Exchange(std::vector<char>* opr, char const cur)
-{
-	char ch=opr->back();
-	opr->pop_back();
-	if(opr->size()>0 && GetOprPriority(cur)>=GetOprPriority(*opr[opr->size()-1]))
-		Exchange(opr,cur);
-	else
-		opr->push_back(cur);
-	opr->push_back(ch);
-	return 1;
-}
-bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
-{
-	std::vector<char> tmp_opr;
-	std::vector<int>  tmp_num;
-	std::vector<std::string> tmp_nam;
-	std::vector<Token_type> tmp_order;
+ bool Exchange(std::vector<char>* opr, char const cur)
+ {
+ 	char ch=opr->back();
+ 	opr->pop_back();
+ 	if(opr->size()>0 && GetOprPriority(cur)>=GetOprPriority((*opr)[opr->size()-1]))
+ 		Exchange(opr,cur);
+ 	else
+ 		opr->push_back(cur);
+ 	opr->push_back(ch);
+ 	return 1;
+ }
 
-	for(int i=0;i<*order.size();++i)
-	{
-		switch(*order[i])
-		{
-			case NAM:
-				tmp_nam.push_back(*nam[a]);
-				++a;
-				break;
-			case NUM:
-				tmp_num.push_back(*nam[b]);
-				++b;
-				break;
-			case OPR:
-				if(tmp_opr.size())
-				{
-					char cur_opr=*opr[c];
-					switch(cur_opr)
-					{
-						case '=':
-							return false;
-							break;
-						default:
-							if(GetOprPriority(cur_opr)>=GetOprPriority(tmp_opr[tmp_opr.size()-1]))
-							{	
+ bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
+ {
+ 	std::vector<char> tmp_opr;
+ 	std::vector<int>  tmp_num;
+ 	std::vector<std::string> tmp_nam;
+ 	std::vector<Token_type> tmp_order;
+
+ 	int a,b,c;
+ 	a=b=c=0;
+
+ 	for(int i=0;i<order->size();++i)
+ 	{
+ 		switch((*order)[i])
+ 		{
+ 			case NAM:
+ 				tmp_nam.push_back((*nam)[a]);
+ 				++a;
+ 				break;
+ 			case NUM:
+ 				tmp_num.push_back((*num)[b]);
+ 				++b;
+ 				break;
+ 			case OPR:
+ 				if(tmp_opr.size())
+ 				{
+ 					char cur_opr=(*opr)[c];
+ 					switch(cur_opr)
+ 					{
+ 						case '=':
+ 							return false;
+ 							break;
+ 						default:
+ 							if(GetOprPriority(cur_opr)>=GetOprPriority(tmp_opr[tmp_opr.size()-1]))
+ 							{	
 								
-								Exchange(&tmp_opr,cur_opr);
-							}
-							else
-								tmp_opr.push_back(cur_opr);
+ 								Exchange(&tmp_opr,cur_opr);
+ 							}
+ 							else
+ 								tmp_opr.push_back(cur_opr);
+ 							break;
+ 					}
+ 				}
+ 				else
+ 					tmp_opr.push_back((*opr)[c]);
+ 				++c;
+ 				break;
+ 		}
+ 	}
+ 	std::cout<<tmp_order.size();
+ 	a=b=c=0;
+				for(int i=0;i<tmp_order.size();++i)
+				{
+					switch(tmp_order[i])
+					{
+						case NAM:
+							std::cout<<tmp_nam[a]<<' ';
+							++a;
+							break;
+						case NUM:
+							std::cout<<tmp_num[b]<<' ';
+							++b;
+							break;
+						case OPR:
+							std::cout<<tmp_opr[c]<<' ';
+							++c;
 							break;
 					}
 				}
-				else
-					tmp_opr.push_back(*opr[c]);
-				++c;
-				break;
-		}
-	}
-	opr=&tmp_opr;
-	num=&tmp_num;
-	nam=&tmp_nam;
-	order=&order;
 
-	return true;
-}
+ 	opr=&tmp_opr;
+ 	num=&tmp_num;
+ 	nam=&tmp_nam;
+ 	order=&tmp_order;
+
+ 	return 1;
+ }
+ int GetOprPriority(char opr)
+ {
+ 	switch(opr)
+ 	{
+ 		case '=': return 0;
+ 		case '+': case '-': return 1;
+ 		case '*': case '/': return 2;
+ 	}
+ 	return -1;
+ }
