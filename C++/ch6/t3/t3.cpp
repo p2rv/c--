@@ -17,7 +17,7 @@ Token_value get_token_type(char const ch);
 void GetToken();
 bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
 int GetOprPriority(char opr);
-bool Exchange(std::vector<char>* opr, char const cur);
+double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order,std::map<std::string, int> values);
 
 int main()
 {
@@ -76,29 +76,10 @@ void GetToken()
 				}
 				break;
 			case END:
-				int a,b,c;
-				a=b=c=0;
-				for(int i=0;i<order.size();++i)
-				{
-					switch(order[i])
-					{
-						case NAM:
-							std::cout<<nam[a]<<' ';
-							++a;
-							break;
-						case NUM:
-							std::cout<<num[b]<<' ';
-							++b;
-							break;
-						case OPR:
-							std::cout<<opr[c]<<' ';
-							++c;
-							break;
-					}
-				}
-				
-				ConvertToRPN(&opr,&num,&nam,&order);
-				
+				if(ConvertToRPN(&opr,&num,&nam,&order))
+					std::cout<<Calculate(&opr,&num,&nam,&order,&values);
+				else
+					std::cout<<"Error in calculate expretion";
 				num.clear();
 				nam.clear();
 				opr.clear();
@@ -135,17 +116,64 @@ Token_value get_token_type(char const ch)
 			return SPACE;	
 	}
 }
- /*bool Exchange(std::vector<char>* opr, char const cur)
- {
- 	char ch=opr->back();
- 	opr->pop_back();
- 	if(opr->size()>0 && GetOprPriority(cur)>=GetOprPriority((*opr)[opr->size()-1]))
- 		Exchange(opr,cur);
- 	else
- 		opr->push_back(cur);
- 	opr->push_back(ch);
- 	return 1;
- }*/
+
+double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order,std::map<std::string, int> values)
+{
+	int result;
+	double lvalue,rvalue;
+	int a,b,c,d;
+	a=b=c=d=0;
+	while(order->size()!=1)
+	{
+		switch((*order)[d])
+		{
+			case NUM:
+				lvalue=rvalue;
+				rvalue=(*num)[a];
+				++a;
+				++d;
+			break;
+			case OPR:
+				switch((*opr)[0])
+				{
+					case '+':
+						result=lvalue+rvalue;
+						rvalue=result; 
+						
+					break;
+					case '-':
+						result=lvalue-rvalue;
+						rvalue=result;
+						if(a>0) --a;
+					break;
+					case '*':
+						result=lvalue * rvalue;
+						rvalue=result;
+						if(a>0) --a;
+					break;
+					case '/':
+						result=lvalue/rvalue;
+						rvalue=result;
+						if(a>0) --a;
+					break;
+				}
+				if(a>0)  
+				{
+					num->erase(num->begin()+a);
+					opr->erase(opr->begin());
+					order->erase(order->begin()+a,order->begin()+a+1); 
+					--a;
+					(*num)[a]=rvalue;
+					if(a>1)
+						lvalue=(*num)[a-1];
+					opr->erase(opr->begin()+c);
+				}
+			break;
+		}
+	}
+	result=(*num)[0];
+	return result;
+}
 
  bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
  {
@@ -202,7 +230,6 @@ Token_value get_token_type(char const ch)
 		tmp_order.push_back(OPR);
 		buffer.pop_back();
 	}
-	std::cout<<'\n'; 	
  	a=b=c=0;
 				for(int i=0;i<tmp_order.size();++i)
 				{
