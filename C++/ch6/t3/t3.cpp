@@ -17,7 +17,7 @@ Token_value get_token_type(char const ch);
 void GetToken();
 bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
 int GetOprPriority(char opr);
-double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order,std::map<std::string, int> values);
+double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
 
 int main()
 {
@@ -77,7 +77,29 @@ void GetToken()
 				break;
 			case END:
 				if(ConvertToRPN(&opr,&num,&nam,&order))
-					std::cout<<Calculate(&opr,&num,&nam,&order,&values);
+				{
+					/*int a,b,c;
+					a=b=c=0;
+					for(int i=0;i<order.size();++i)
+					{
+						switch(order[i])
+					{
+						case NAM:
+							std::cout<<nam[a]<<' ';
+							++a;
+							break;
+						case NUM:
+							std::cout<<num[b]<<' ';
+							++b;
+							break;
+						case OPR:
+							std::cout<<opr[c]<<' ';
+							++c;
+							break;
+					}
+					}*/
+					std::cout<<Calculate(&opr,&num,&nam,&order);
+				}
 				else
 					std::cout<<"Error in calculate expretion";
 				num.clear();
@@ -117,61 +139,89 @@ Token_value get_token_type(char const ch)
 	}
 }
 
-double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order,std::map<std::string, int> values)
+double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
 {
-	int result;
+	double result;
 	double lvalue,rvalue;
 	int a,b,c,d;
 	a=b=c=d=0;
-	while(order->size()!=1)
+	
+	while(order->size())
 	{
-		switch((*order)[d])
+		
+		int aa,bb,cc;
+					aa=bb=cc=0;
+					for(int i=0;i<order->size();++i)
+					{
+						switch((*order)[i])
+					{
+						case NAM:
+							std::cout<<(*nam)[aa]<<' ';
+							++aa;
+							break;
+						case NUM:
+							std::cout<<(*num)[bb]<<' ';
+							++bb;
+							break;
+						case OPR:
+							std::cout<<(*opr)[cc]<<' ';
+							++cc;
+							break;
+					}
+					}
+					std::cout<<'\n';
+
+		switch((*order)[a])
 		{
+			
 			case NUM:
+
 				lvalue=rvalue;
-				rvalue=(*num)[a];
+				rvalue=(*num)[b];
 				++a;
-				++d;
+				++b;
 			break;
 			case OPR:
 				switch((*opr)[0])
 				{
 					case '+':
-						result=lvalue+rvalue;
-						rvalue=result; 
-						
+						result=lvalue+rvalue; 
 					break;
 					case '-':
 						result=lvalue-rvalue;
-						rvalue=result;
-						if(a>0) --a;
 					break;
 					case '*':
 						result=lvalue * rvalue;
-						rvalue=result;
-						if(a>0) --a;
 					break;
 					case '/':
 						result=lvalue/rvalue;
-						rvalue=result;
-						if(a>0) --a;
 					break;
 				}
-				if(a>0)  
+				if(b-1>0)  
 				{
-					num->erase(num->begin()+a);
-					opr->erase(opr->begin());
-					order->erase(order->begin()+a,order->begin()+a+1); 
+					--b;
 					--a;
-					(*num)[a]=rvalue;
-					if(a>1)
-						lvalue=(*num)[a-1];
-					opr->erase(opr->begin()+c);
+					num->erase(num->begin()+b);
+					opr->erase(opr->begin());
+					order->erase(order->begin()+b,order->begin()+b+1); 
+					(*num)[b-1]=result;
+					if(b-1>0)
+					{
+						rvalue=(*num)[b-1];
+						lvalue=(*num)[b-2];
+					}
+					if(b-1==0)
+					{
+						lvalue=result;
+					}
+
 				}
+				else
+					return result;
 			break;
 		}
 	}
-	result=(*num)[0];
+	//result=(*num)[0];
 	return result;
 }
 
@@ -230,7 +280,7 @@ double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::s
 		tmp_order.push_back(OPR);
 		buffer.pop_back();
 	}
- 	a=b=c=0;
+ 	/*a=b=c=0;
 				for(int i=0;i<tmp_order.size();++i)
 				{
 					switch(tmp_order[i])
@@ -249,11 +299,15 @@ double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::s
 							break;
 					}
 				}
-
- 	opr=&tmp_opr;
- 	num=&tmp_num;
- 	nam=&tmp_nam;
- 	order=&tmp_order;
+*/
+	opr->clear();
+	num->clear();
+	nam->clear();
+	order->clear();
+ 	opr->swap(tmp_opr);
+ 	num->swap(tmp_num);
+ 	nam->swap(tmp_nam);
+ 	order->swap(tmp_order);
 
  	return 1;
  }
