@@ -34,7 +34,7 @@ int main()
 {
 	clock_t time=clock();
 	/* code */
-	ReadFromDisk();
+	ReadFroDmisk();
 	time=clock()-time;
 	printf("%f", (double)time/CLOCKS_PER_SEC);
 	return 0;

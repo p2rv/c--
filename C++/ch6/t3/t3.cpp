@@ -1,323 +1,236 @@
+/*
+This is example calc with using RPN.
+Reverse Polish notation (RPN) is a mathematical notation in which every operator follows all of its operands,
+in contrast to Polish notation, which puts the operator in the prefix position.
+
+The infix expression "5 + ((1 + 2) × 4) − 3" can be written down like this in RPN:
+5 1 2 + 4 × + 3 −
+*/
+
+
 #include <iostream>
 #include <ctype.h>
 #include <string>
 #include <map>
 #include <vector>
+#include <stack>
+#include <sstream>
 
-enum Token_value
-{
-	NAME,NUMB,END,ASSIGN,MUL,DIV,PLUS,MINUS,SPACE
-};
+using namespace std;
+
 enum Token_type
 {
-	NAM,NUM,OPR
+	NAME,NUMB,MUL='*',DIV='/',PLUS='+',MINUS='-',ASSIGN='=',SPACE,END=';',PRINT='\n',ERR
+};
+struct Token_value
+{
+	double numb;
+	string name;
+	Token_type type;
+
+	Token_value()
+	{
+		numb=0;
+		name="";
+		type=PRINT;
+	}
+	bool operator >(Token_value const & a)
+    {
+        return getPriority(*this) > getPriority(a);
+    }
+    bool operator <=(Token_value const & a)
+    {
+        return getPriority(*this) <= getPriority(a);
+    }
+    int getPriority(Token_value const & a)
+    {
+        switch(a.type)
+        {
+            case MUL: case DIV: return 2;
+            case PLUS: case MINUS: return 1;
+            case ASSIGN: return 0;
+        }
+    }
 };
 
-Token_value get_token_type(char const ch);
-void GetToken();
-bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
-int GetOprPriority(char opr);
-double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order);
+Token_type getToken();
+bool getExpr();
+void calc();
+
+stack<Token_value*> istr;
+stack<Token_value*> rnotation;
+Token_type curToken;
 
 int main()
 {
-	GetToken();
+
+	getExpr();
 	return 0;
 }
-void GetToken()
+bool getExpr()
+{
+    Token_type token=PRINT;
+    while(token!=END)
+    {
+     token=getToken();
+     switch(token)
+     {
+         case ERR: return false;
+         case PRINT: calc();
+         case END: {calc(); return true;}
+     }
+    }
+    return false;
+}
+
+
+void convertToRPN()
+{
+    Token_value *cur;
+
+	stack<Token_value*> operands;
+	//позже перенесу эту часть функционала в getExpr
+	while(!istr.empty())
+	{
+		cur=istr.top();
+		istr.pop();
+		if(cur->type==NAME||cur->type==NUMB)
+            rnotation.push(cur);
+        else
+            {
+                 if(operands.top()<=cur)
+                    operands.push(cur);
+                 else
+                 {
+                    while(!operands.empty())
+                       { rnotation.push(operands.top());
+                       	operands.pop();
+                       }
+                    operands.push(cur);
+                 }
+            }
+	}
+}
+void calc()
+{
+    stack<Token_value*> tmp;
+    double result;
+    Token_value *lleft,*rright,*opr,*cur;
+    lleft->type=rright->type=PRINT;
+
+    while(!rnotation.empty())
+    {
+        cur=rnotation.top();
+        rnotation.pop();
+        switch(cur->type)
+        {
+            case NUMB: case NAME:
+                if(lleft->type==PRINT)
+                    lleft=cur;
+                else
+                {
+                    if(rright->type==PRINT)
+                        rright=cur;
+                    else
+                    {
+                        tmp.push(lleft);
+                        lleft=rright;
+                        rright=cur;
+                    }
+                }
+                break;
+            case PLUS:
+                    if(!tmp.empty())
+                        {
+                        	rright->numb=(tmp.top())->numb+rright->numb;
+                        	tmp.pop();
+                        }
+                    break;
+            case MINUS: 
+					{		
+            		if(!tmp.empty())
+                        rright->numb=(tmp.top())->numb-rright->numb;
+                    else
+                    	rright->numb=-rright->numb;
+                    tmp.pop();
+                    break;
+               		 }
+            case MUL:
+            {
+            		if(!tmp.empty())
+                        rright->numb=(tmp.top())->numb*rright->numb;
+                    else
+                    {
+                    	cout<<"error in expression in mul operations";
+                    	return;
+                    }
+                    tmp.pop();
+                    break;
+                }
+            case DIV:
+            {
+            		if(!tmp.empty())
+                        rright->numb=(tmp.top())->numb/rright->numb;
+                    else
+                    {
+                    	cout<<"error in expression in div operations";
+                    	return;
+                    }
+                    tmp.pop();
+                    break;
+                }
+        }
+
+    }
+    cout.setf(ios_base::fixed);
+    cout<< rright->numb<<'\n';
+}
+Token_type getToken()
 {
 	char ch;
-	std::vector<char> opr;
-	std::vector<int> num;
-	std::vector<std::string> nam;
-	std::vector<Token_type> order;
-	std::map<std::string,int> values;
-	std::string tmp_nam;
-	int tmp_num;
-	char tmp_opr;
-	Token_type tmp_type;
+	Token_value *value;
 
-    while(1)
-    {
-    	std::cin.get(ch);
-		switch(get_token_type(ch))
+	while(cin.get(ch))
+	{
+		value=new Token_value();
+		if(isalpha(ch))
 		{
-			case NAME:
-				std::cin.putback(ch);
-				std::cin>>tmp_nam;
-				nam.push_back(tmp_nam);
-				order.push_back(NAM);
-				values[tmp_nam]=0;
-			break;
-			case NUMB:
-				std::cin.putback(ch);
-				std::cin>>tmp_num;
-				num.push_back(tmp_num);
-				order.push_back(NUM);
-			break;
-			case PLUS:case MINUS:case DIV:case MUL:
-				opr.push_back(ch);
-				order.push_back(OPR);
-				break;
-			case ASSIGN:
-				if (nam.size()==order.size()==1)
-				{
-					opr.push_back(ch);
-					order.push_back(OPR);
-				}
-				else
-				{
-					std::cin.ignore(10000, '\n');
-					std::cout<<"Fail";
-					num.clear();
-					nam.clear();
-					opr.clear();
-					order.clear();
-				}
-				break;
-			case END:
-				if(ConvertToRPN(&opr,&num,&nam,&order))
-				{
-					/*int a,b,c;
-					a=b=c=0;
-					for(int i=0;i<order.size();++i)
-					{
-						switch(order[i])
-					{
-						case NAM:
-							std::cout<<nam[a]<<' ';
-							++a;
-							break;
-						case NUM:
-							std::cout<<num[b]<<' ';
-							++b;
-							break;
-						case OPR:
-							std::cout<<opr[c]<<' ';
-							++c;
-							break;
-					}
-					}*/
-					std::cout<<Calculate(&opr,&num,&nam,&order);
-				}
-				else
-					std::cout<<"Error in calculate expretion";
-				num.clear();
-				nam.clear();
-				opr.clear();
-				order.clear();
-				std::cout<<'\n';
-			break;
+			cin.putback(ch);
+			cin>>value->name;
+			value->type=NAME;
+			istr.push(value);
+			return curToken=NAME;
 		}
-    }
-}
-
-Token_value get_token_type(char const ch)
-{
-	if(isalpha(ch))
-		return NAME;
-	if(isdigit(ch))
-		return NUMB;
-	switch(ch)
-	{
-		case '=': 
-			return ASSIGN;
-		case '*':
-			return MUL;
-		case '/':
-			return DIV;
-		case '+':
-			return PLUS;
-		case '-':
-			return MINUS;
-		case ' ':
-			return SPACE;
-		case '\n':
-			return END;
-		default:
-			return SPACE;	
-	}
-}
-
-double Calculate(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
-{
-	double result;
-	double lvalue,rvalue;
-	int a,b,c,d;
-	a=b=c=d=0;
-	
-	while(order->size())
-	{
-		
-		int aa,bb,cc;
-					aa=bb=cc=0;
-					for(int i=0;i<order->size();++i)
-					{
-						switch((*order)[i])
-					{
-						case NAM:
-							std::cout<<(*nam)[aa]<<' ';
-							++aa;
-							break;
-						case NUM:
-							std::cout<<(*num)[bb]<<' ';
-							++bb;
-							break;
-						case OPR:
-							std::cout<<(*opr)[cc]<<' ';
-							++cc;
-							break;
-					}
-					}
-					std::cout<<'\n';
-
-		switch((*order)[a])
+		else
 		{
-			
-			case NUM:
 
-				lvalue=rvalue;
-				rvalue=(*num)[b];
-				++a;
-				++b;
-			break;
-			case OPR:
-				switch((*opr)[0])
-				{
-					case '+':
-						result=lvalue+rvalue; 
+			switch(ch)
+			{
+				case ',':
+					cin.putback('.');
 					break;
-					case '-':
-						result=lvalue-rvalue;
-					break;
-					case '*':
-						result=lvalue * rvalue;
-					break;
-					case '/':
-						result=lvalue/rvalue;
-					break;
-				}
-				if(b-1>0)  
-				{
-					--b;
-					--a;
-					num->erase(num->begin()+b);
-					opr->erase(opr->begin());
-					order->erase(order->begin()+b,order->begin()+b+1); 
-					(*num)[b-1]=result;
-					if(b-1>0)
+				case '1': case '2': case '3': case '4': case '5': case '6':
+				case '7': case '8': case '9': case '0': case '.':
 					{
-						rvalue=(*num)[b-1];
-						lvalue=(*num)[b-2];
-					}
-					if(b-1==0)
-					{
-						lvalue=result;
-					}
+					    cin.putback(ch);
+                        cin>>value->numb;
+                        value->type=NUMB;
+                        istr.push(value);
+                        return curToken=NUMB;
+					 }
+				case '+': case '-': case '*': case '/':
+				    {
+				    	value->type=Token_type(ch);
+                        istr.push(value);
+                        return curToken=Token_type(ch);
 
-				}
-				else
-					return result;
-			break;
+				    }
+                case ';': case '\n':
+                        return curToken=Token_type(ch);
+				default:
+					return curToken=ERR;
+			}
 		}
 	}
-	//result=(*num)[0];
-	return result;
+	return curToken= END;
 }
-
- bool ConvertToRPN(std::vector<char>* opr,std::vector<int>* num,std::vector<std::string>* nam,std::vector<Token_type>* order)
- {
- 	std::vector<char> tmp_opr,buffer;
- 	std::vector<int>  tmp_num;
- 	std::vector<std::string> tmp_nam;
- 	std::vector<Token_type> tmp_order;
-
- 	int a,b,c;
- 	a=b=c=0;
-
- 	for(int i=0;i<order->size();++i)
- 	{
- 		switch((*order)[i])
- 		{
- 			case NAM:
- 				tmp_nam.push_back((*nam)[a]);
- 				tmp_order.push_back(NAM);
- 				++a;
- 				break;
- 			case NUM:
- 				tmp_num.push_back((*num)[b]);
- 				tmp_order.push_back(NUM);
- 				++b;
- 				break;
- 			case OPR:
- 				if(buffer.size())
- 				{
- 					char cur_opr=(*opr)[c];
- 					if(GetOprPriority(cur_opr)<GetOprPriority(buffer[buffer.size()-1]))
-					{
-						while(buffer.size()>0)
-						{
-							char top=buffer.back();
-							tmp_opr.push_back(top);
-							tmp_order.push_back(OPR);
-							buffer.pop_back();
-						}
-						buffer.push_back(cur_opr);
-					}
-					else
-	 					buffer.push_back(cur_opr);
- 				}
- 				else
- 					buffer.push_back((*opr)[c]);
- 				++c;
- 				break;
- 		}
- 	}
- 	while(buffer.size()>0)
-	{
-		char top=buffer.back();
-		tmp_opr.push_back(top);
-		tmp_order.push_back(OPR);
-		buffer.pop_back();
-	}
- 	/*a=b=c=0;
-				for(int i=0;i<tmp_order.size();++i)
-				{
-					switch(tmp_order[i])
-					{
-						case NAM:
-							std::cout<<tmp_nam[a]<<' ';
-							++a;
-							break;
-						case NUM:
-							std::cout<<tmp_num[b]<<' ';
-							++b;
-							break;
-						case OPR:
-							std::cout<<tmp_opr[c]<<' ';
-							++c;
-							break;
-					}
-				}
-*/
-	opr->clear();
-	num->clear();
-	nam->clear();
-	order->clear();
- 	opr->swap(tmp_opr);
- 	num->swap(tmp_num);
- 	nam->swap(tmp_nam);
- 	order->swap(tmp_order);
-
- 	return 1;
- }
- int GetOprPriority(char opr)
- {
- 	switch(opr)
- 	{
- 		case '=': return 0;
- 		case '+': case '-': return 1;
- 		case '*': case '/': return 2;
- 	}
- 	return -1;
- }
