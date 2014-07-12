@@ -40,10 +40,13 @@ struct Token_value
     }
     bool operator <=(Token_value const & a)
     {
+    	if (this==NULL) return true;	
         return getPriority(*this) <= getPriority(a);
     }
+
     int getPriority(Token_value const & a)
     {
+    	
         switch(a.type)
         {
             case MUL: case DIV: return 2;
@@ -56,6 +59,7 @@ struct Token_value
 Token_type getToken();
 bool getExpr();
 void calc();
+void convertToRPN();
 
 stack<Token_value*> istr;
 stack<Token_value*> rnotation;
@@ -76,7 +80,7 @@ bool getExpr()
      switch(token)
      {
          case ERR: return false;
-         case PRINT: calc();
+         case PRINT: {calc(); break;}
          case END: {calc(); return true;}
      }
     }
@@ -87,6 +91,7 @@ bool getExpr()
 void convertToRPN()
 {
     Token_value *cur;
+    Token_value *prev;
 
 	stack<Token_value*> operands;
 	//позже перенесу эту часть функционала в getExpr
@@ -94,25 +99,40 @@ void convertToRPN()
 	{
 		cur=istr.top();
 		istr.pop();
+		
 		if(cur->type==NAME||cur->type==NUMB)
             rnotation.push(cur);
         else
             {
-                 if(operands.top()<=cur)
-                    operands.push(cur);
-                 else
+            	if(!operands.empty())
+					prev=operands.top();
+				else
+					prev=NULL;
+
+                if(prev<=cur)
+                    operands.push(cur); 	
+                else
                  {
                     while(!operands.empty())
-                       { rnotation.push(operands.top());
+                       { 
+                       	rnotation.push(operands.top());
                        	operands.pop();
+                       	cout<<"/";
                        }
                     operands.push(cur);
                  }
             }
 	}
+	 while(!operands.empty())
+     { 
+                       	rnotation.push(operands.top());
+                       	operands.pop();
+                       	cout<<"*";
+     }
 }
 void calc()
 {
+	convertToRPN();
     stack<Token_value*> tmp;
     double result;
     Token_value *lleft,*rright,*opr,*cur;
@@ -125,6 +145,7 @@ void calc()
         switch(cur->type)
         {
             case NUMB: case NAME:
+            {
                 if(lleft->type==PRINT)
                     lleft=cur;
                 else
@@ -138,12 +159,15 @@ void calc()
                         rright=cur;
                     }
                 }
+                cout<<cur->numb;
                 break;
+            }
             case PLUS:
                     if(!tmp.empty())
                         {
                         	rright->numb=(tmp.top())->numb+rright->numb;
                         	tmp.pop();
+                        	cout<<"+";
                         }
                     break;
             case MINUS: 
@@ -153,6 +177,7 @@ void calc()
                     else
                     	rright->numb=-rright->numb;
                     tmp.pop();
+                    cout<<"-";
                     break;
                		 }
             case MUL:
