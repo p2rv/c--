@@ -80,9 +80,15 @@ bool getExpr()
      switch(token)
      {
          case ERR: return false;
-         case PRINT: {calc(); break;}
+         case PRINT: 
+         {
+         	calc(); while(!istr.empty())
+     			{istr.pop();} 
+     		break;
+     	}
          case END: {calc(); return true;}
      }
+     
     }
     return false;
 }
@@ -125,9 +131,17 @@ void convertToRPN()
 	}
 	 while(!operands.empty())
      { 
-                       	rnotation.push(operands.top());
-                       	operands.pop();
-                       	cout<<"*";
+        rnotation.push(operands.top());
+        operands.pop();
+     }
+     while(!istr.empty())
+     {
+     	istr.pop();
+     }
+     while(!rnotation.empty())
+     {
+     	istr.push(rnotation.top());
+     	rnotation.pop();
      }
 }
 void calc()
@@ -138,10 +152,10 @@ void calc()
     Token_value *lleft,*rright,*opr,*cur;
     lleft->type=rright->type=PRINT;
 
-    while(!rnotation.empty())
+    while(!istr.empty())
     {
-        cur=rnotation.top();
-        rnotation.pop();
+        cur=istr.top();
+        istr.pop();
         switch(cur->type)
         {
             case NUMB: case NAME:
@@ -169,13 +183,27 @@ void calc()
                         	tmp.pop();
                         	cout<<"+";
                         }
+                        else
+                        {
+                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
+                        		rright->numb=lleft->numb+rright->numb;
+                        	cout<<"+";	
+                        }
                     break;
             case MINUS: 
 					{		
             		if(!tmp.empty())
                         rright->numb=(tmp.top())->numb-rright->numb;
                     else
-                    	rright->numb=-rright->numb;
+                    {
+                    	if(lleft->type!=PRINT&&rright->type!=PRINT)
+                        		rright->numb=lleft->numb-rright->numb;
+                        else
+                        	if(lleft->type!=PRINT)
+                        		lleft->numb=-lleft->numb;
+                        	else
+                    			rright->numb=-rright->numb;
+                    }
                     tmp.pop();
                     cout<<"-";
                     break;
@@ -185,10 +213,17 @@ void calc()
             		if(!tmp.empty())
                         rright->numb=(tmp.top())->numb*rright->numb;
                     else
-                    {
-                    	cout<<"error in expression in mul operations";
-                    	return;
-                    }
+                        {
+                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
+                        		rright->numb=lleft->numb*rright->numb;
+                        	else
+                    		{
+                    			cout<<"error in expression in mul operations";
+                    			return;
+                   			 }
+                        	cout<<"*";	
+                        }
+                    
                     tmp.pop();
                     break;
                 }
@@ -197,10 +232,16 @@ void calc()
             		if(!tmp.empty())
                         rright->numb=(tmp.top())->numb/rright->numb;
                     else
-                    {
-                    	cout<<"error in expression in div operations";
-                    	return;
-                    }
+                        {
+                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
+                        		rright->numb=lleft->numb/rright->numb;
+                        	else
+                    		{
+                    			cout<<"error in expression in mul operations";
+                    			return;
+                   			 }
+                        	cout<<"/";	
+                        }
                     tmp.pop();
                     break;
                 }
