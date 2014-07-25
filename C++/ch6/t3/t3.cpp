@@ -40,13 +40,13 @@ struct Token_value
     }
     bool operator <=(Token_value const & a)
     {
-    	if (this==NULL) return true;	
-        return getPriority(*this) <= getPriority(a);
+    	if (this==NULL)
+            return true;
+    	else
+            return getPriority(*this) <= getPriority(a);
     }
-
     int getPriority(Token_value const & a)
     {
-    	
         switch(a.type)
         {
             case MUL: case DIV: return 2;
@@ -60,14 +60,13 @@ Token_type getToken();
 bool getExpr();
 void calc();
 void convertToRPN();
+void print();
 
-stack<Token_value*> istr;
-stack<Token_value*> rnotation;
-Token_type curToken;
+vector<Token_value*> istr;
+vector<Token_value*> rnotation;
 
 int main()
 {
-
 	getExpr();
 	return 0;
 }
@@ -79,178 +78,23 @@ bool getExpr()
      token=getToken();
      switch(token)
      {
-         case ERR: return false;
-         case PRINT: 
-         {
-         	calc(); while(!istr.empty())
-     			{istr.pop();} 
-     		break;
-     	}
-         case END: {calc(); return true;}
-     }
-     
-    }
-    return false;
-}
-
-
-void convertToRPN()
-{
-    Token_value *cur;
-    Token_value *prev;
-
-	stack<Token_value*> operands;
-	//позже перенесу эту часть функционала в getExpr
-	while(!istr.empty())
-	{
-		cur=istr.top();
-		istr.pop();
-		
-		if(cur->type==NAME||cur->type==NUMB)
-            rnotation.push(cur);
-        else
-            {
-            	if(!operands.empty())
-					prev=operands.top();
-				else
-					prev=NULL;
-
-                if(prev<=cur)
-                    operands.push(cur); 	
-                else
-                 {
-                    while(!operands.empty())
-                       { 
-                       	rnotation.push(operands.top());
-                       	operands.pop();
-                       	cout<<"/";
-                       }
-                    operands.push(cur);
-                 }
-            }
-	}
-	 while(!operands.empty())
-     { 
-        rnotation.push(operands.top());
-        operands.pop();
-     }
-     while(!istr.empty())
-     {
-     	istr.pop();
-     }
-     while(!rnotation.empty())
-     {
-     	istr.push(rnotation.top());
-     	rnotation.pop();
-     }
-}
-void calc()
-{
-	convertToRPN();
-    stack<Token_value*> tmp;
-    double result;
-    Token_value *lleft,*rright,*opr,*cur;
-    lleft->type=rright->type=PRINT;
-
-    while(!istr.empty())
-    {
-        cur=istr.top();
-        istr.pop();
-        switch(cur->type)
+         case ERR:
         {
-            case NUMB: case NAME:
-            {
-                if(lleft->type==PRINT)
-                    lleft=cur;
-                else
-                {
-                    if(rright->type==PRINT)
-                        rright=cur;
-                    else
-                    {
-                        tmp.push(lleft);
-                        lleft=rright;
-                        rright=cur;
-                    }
-                }
-                cout<<cur->numb;
-                break;
-            }
-            case PLUS:
-                    if(!tmp.empty())
-                        {
-                        	rright->numb=(tmp.top())->numb+rright->numb;
-                        	tmp.pop();
-                        	cout<<"+";
-                        }
-                        else
-                        {
-                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
-                        		rright->numb=lleft->numb+rright->numb;
-                        	cout<<"+";	
-                        }
-                    break;
-            case MINUS: 
-					{		
-            		if(!tmp.empty())
-                        rright->numb=(tmp.top())->numb-rright->numb;
-                    else
-                    {
-                    	if(lleft->type!=PRINT&&rright->type!=PRINT)
-                        		rright->numb=lleft->numb-rright->numb;
-                        else
-                        	if(lleft->type!=PRINT)
-                        		lleft->numb=-lleft->numb;
-                        	else
-                    			rright->numb=-rright->numb;
-                    }
-                    tmp.pop();
-                    cout<<"-";
-                    break;
-               		 }
-            case MUL:
-            {
-            		if(!tmp.empty())
-                        rright->numb=(tmp.top())->numb*rright->numb;
-                    else
-                        {
-                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
-                        		rright->numb=lleft->numb*rright->numb;
-                        	else
-                    		{
-                    			cout<<"error in expression in mul operations";
-                    			return;
-                   			 }
-                        	cout<<"*";	
-                        }
-                    
-                    tmp.pop();
-                    break;
-                }
-            case DIV:
-            {
-            		if(!tmp.empty())
-                        rright->numb=(tmp.top())->numb/rright->numb;
-                    else
-                        {
-                        	if(lleft->type!=PRINT&&rright->type!=PRINT)
-                        		rright->numb=lleft->numb/rright->numb;
-                        	else
-                    		{
-                    			cout<<"error in expression in mul operations";
-                    			return;
-                   			 }
-                        	cout<<"/";	
-                        }
-                    tmp.pop();
-                    break;
-                }
+            cout<<"error in exp parse"<<'\n';
+            istr.clear();
+     		break;
         }
-
+         case PRINT:case END:
+         {
+         	calc();
+         	istr.clear();
+     		break;
+     	 }
+      }
     }
-    cout.setf(ios_base::fixed);
-    cout<< rright->numb<<'\n';
+    return true;
 }
+
 Token_type getToken()
 {
 	char ch;
@@ -264,8 +108,8 @@ Token_type getToken()
 			cin.putback(ch);
 			cin>>value->name;
 			value->type=NAME;
-			istr.push(value);
-			return curToken=NAME;
+			istr.push_back(value);
+			return NAME;
 		}
 		else
 		{
@@ -281,22 +125,173 @@ Token_type getToken()
 					    cin.putback(ch);
                         cin>>value->numb;
                         value->type=NUMB;
-                        istr.push(value);
-                        return curToken=NUMB;
+                        istr.push_back(value);
+                        return NUMB;
 					 }
 				case '+': case '-': case '*': case '/':
 				    {
 				    	value->type=Token_type(ch);
-                        istr.push(value);
-                        return curToken=Token_type(ch);
+                        istr.push_back(value);
+                        return Token_type(ch);
 
 				    }
                 case ';': case '\n':
-                        return curToken=Token_type(ch);
+                        return Token_type(ch);
 				default:
-					return curToken=ERR;
+					{
+					    cin.clear();
+                        cin.sync();
+					    return ERR;
+
+					}
 			}
 		}
 	}
-	return curToken= END;
 }
+
+void convertToRPN()
+{
+    Token_value *cur;
+    Token_value *prev;
+	vector<Token_value*> operands;
+	for(auto it = istr.begin(); it != istr.end(); ++it)
+	{
+		cur=*it;
+		if(cur->type==NAME||cur->type==NUMB)
+            rnotation.push_back(cur);
+        else
+            {
+            	if(operands.size())
+					    prev=operands.back();
+				else
+					prev=NULL;
+                if(*prev<=*cur)
+                    operands.insert(operands.begin(),cur);
+                else
+                 {
+                    rnotation.insert(rnotation.end(),operands.begin(),operands.end());
+                    operands.clear();
+                    operands.insert(operands.begin(),cur);
+                 }
+            }
+	}
+	rnotation.insert(rnotation.end(),operands.begin(),operands.end());
+}
+void print()
+{
+    Token_value* cur;
+    for(auto it = rnotation.begin(); it != rnotation.end(); ++it)
+    {
+        cur=*it;
+        switch(cur->type)
+        {
+            case NUMB: case NAME:
+            {
+                cout<<cur->numb;
+                break;
+            }
+            case PLUS:case MINUS:case MUL: case DIV:
+                cout<<(char)cur->type;
+                break;
+        }
+    }
+    cout<<'\n';
+}
+void calc()
+{
+	convertToRPN();
+    vector<Token_value*> tmp;
+    double result;
+    Token_value *lleft,*rright,*opr,*cur;
+   for(auto it = rnotation.begin(); it != rnotation.end(); ++it)
+    {
+        cur=*it;
+        switch(cur->type)
+        {
+            case NUMB: case NAME:
+            {
+                tmp.push_back(cur);
+                break;
+            }
+            case PLUS:
+                    {
+                        if(tmp.size()>=2)
+                        {
+                            lleft=*(tmp.end()-2);
+                            rright=*(tmp.end()-1);
+                            cout<<lleft->numb<<" + "<<rright->numb;
+                            rright->numb=lleft->numb+rright->numb;
+                            cout<<" ="<<rright->numb<<'\n';
+                            tmp.erase(tmp.end()-2);
+                        }
+                        else
+                            cout<<"Error in calculate exp" <<'\n';
+
+                    break;
+                    }
+            case MINUS:
+					{
+					    switch(tmp.size())
+					    {
+					        case 0: cout<<"Error in calculate exp" <<'\n'; break;
+					        case 1:
+                                {
+                                    rright=*(tmp.end()-1);
+                                    cout<<" - "<<rright->numb;
+                                    rright->numb=-rright->numb;
+                                    cout<<" ="<<rright->numb<<'\n';
+                                    break;
+                                }
+                            default:
+                                {
+                                    lleft=*(tmp.end()-2);
+                                    rright=*(tmp.end()-1);
+                                    cout<<lleft->numb<<" - "<<rright->numb;
+                                    rright->numb=lleft->numb-rright->numb;
+                                    cout<<" ="<<rright->numb<<'\n';
+                                    tmp.erase(tmp.end()-2);
+                                    break;
+                                }
+					    }
+					    break;
+               		 }
+            case MUL:
+            {
+                if(tmp.size()>=2)
+                {
+                    lleft=*(tmp.end()-2);
+                    rright=*(tmp.end()-1);
+                    cout<<lleft->numb<<" * "<<rright->numb;
+                    rright->numb=lleft->numb*rright->numb;
+                    cout<<" ="<<rright->numb<<'\n';
+                    tmp.erase(tmp.end()-2);
+
+                }
+                else
+                    cout<<"Error in calculate exp" <<'\n';
+                break;
+                }
+            case DIV:
+            {
+            		if(tmp.size()>=2)
+                {
+            		lleft=*(tmp.end()-2);
+                    rright=*(tmp.end()-1);
+                    cout<<lleft->numb<<" / "<<rright->numb;
+                    rright->numb=lleft->numb/rright->numb;
+                    cout<<" ="<<rright->numb<<'\n';
+                    tmp.erase(tmp.end()-2);
+                }
+                else
+                    cout<<"Error in calculate exp" <<'\n';
+                    break;
+                }
+        }
+
+
+    }
+    cout.setf(ios_base::fixed);
+    cout<< rright->numb<<'\n';
+    rnotation.clear();
+}
+
